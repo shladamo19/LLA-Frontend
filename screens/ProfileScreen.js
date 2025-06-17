@@ -8,7 +8,8 @@ export default function ProfileScreen({ route, navigation }) {
   useEffect(() => {
     const createUser = async () => {
       try {
-        await axios.post('https://<your-backend-url>/api/user', {
+        await axios.post('https://lla-backend.onrender.com/api/user', {
+          , {
           name,
           birthdate,
           mood,
