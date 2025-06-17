@@ -1,99 +1,105 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Text, StyleSheet } from 'react-native';
-import axios from 'axios';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 
-const EnergyDashboard = () => {
-  const [userData, setUserData] = useState({});
+const DashboardEnergy = () => {
+  const [energyData, setEnergyData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const res = await axios.get('https://lla-backend.onrender.com/api/user');
-        setUserData(res.data);
+    fetch('https://lla-backend-mj96.onrender.com/energy')
+      .then(response => response.json())
+      .then(data => {
+        setEnergyData(data);
         setLoading(false);
-      } catch (err) {
-        console.error('Error fetching user data:', err);
+      })
+      .catch(error => {
+        console.error('Error fetching energy data:', error);
         setLoading(false);
-      }
-    };
-    fetchUserData();
+      });
   }, []);
 
-  if (loading) return <Text style={styles.loading}>Loading Dashboard...</Text>;
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#888" />
+        <Text>Loading your energy data...</Text>
+      </View>
+    );
+  }
+
+  if (!energyData) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load energy dashboard.</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Welcome back, {userData.name} 👋</Text>
+      <Text style={styles.header}>Live / Love / Align</Text>
 
-      <Section title="🌟 Energy Snapshot" content={userData.energySnapshot} />
-      <Section title="🎵 Song of the Day" content={userData.songOfTheDay} />
-      <Section title="📜 Daily Quote/Verse" content={userData.quoteOrVerse} />
-      <Section title="🔮 Zodiac & Astro Forecast" content={userData.zodiacForecast} />
-      <Section title="🌦️ Weather Meaning" content={userData.weatherMeaning} />
-      <Section title="😌 Senses & Preferences" content={userData.sensoryInsights} />
-      <Section title="🧠 Mental Health Signals" content={userData.mentalHealthMeaning} />
-      <Section title="🍱 Food Cravings & Symbolism" content={userData.foodMeaning} />
-      <Section title="🫁 Breathing & Healing Practices" content={userData.breathingPractice} />
-      <Section title="💡 Suggested Activity" content={userData.activitySuggestion} />
-      <Section title="🧬 Inner Archetypes" content={userData.innerArchetypes} />
-      <Section title="🧍 External Archetypes" content={userData.peopleRoles} />
-      <Section title="🐾 Pets as Mirrors" content={userData.petMeaning} />
-      <Section title="🏈 Sports & Hobbies" content={userData.hobbyMeaning} />
-      <Section title="🖼️ Tattoos, Clothes, Dreams" content={userData.symbolicChoices} />
-      <Section title="📚 Historical/Mythical Parallels" content={userData.historicalContext} />
-      <Section title="📺 Media as Mirror" content={userData.mediaMirror} />
-      <Section title="📅 Life Events & Meaning" content={userData.lifeEventInsights} />
-      <Section title="🧠 Addictions & Shadow" content={userData.addictionInsights} />
-
-      <Text style={styles.footer}>LLA (Live Love Align) – Powered by You 🌍</Text>
+      {Object.entries(energyData).map(([key, value]) => (
+        <View key={key} style={styles.card}>
+          <Text style={styles.label}>{formatKey(key)}</Text>
+          <Text style={styles.value}>{formatValue(value)}</Text>
+        </View>
+      ))}
     </ScrollView>
   );
 };
 
-const Section = ({ title, content }) => (
-  <View style={styles.section}>
-    <Text style={styles.title}>{title}</Text>
-    <Text style={styles.content}>{content || '—'}</Text>
-  </View>
-);
+const formatKey = (key) => {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const formatValue = (value) => {
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'object') return JSON.stringify(value, null, 2);
+  return value?.toString() ?? 'N/A';
+};
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    paddingBottom: 50,
+    padding: 16,
+    paddingBottom: 60,
+    backgroundColor: '#fff',
   },
   header: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  loading: {
-    padding: 20,
-    fontSize: 18,
+    fontSize: 28,
+    fontWeight: '700',
     textAlign: 'center',
+    marginBottom: 24,
   },
-  section: {
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    paddingBottom: 10,
+  card: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 12,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '500',
-    marginBottom: 5,
-  },
-  content: {
+  label: {
     fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 14,
     color: '#333',
   },
-  footer: {
-    marginTop: 30,
-    fontSize: 14,
-    textAlign: 'center',
-    color: '#888',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
   },
 });
 
-export default EnergyDashboard;
+export default DashboardEnergy;
+
