@@ -1,6 +1,6 @@
 import React from 'react';
-import DashboardEnergy from './DashboardEnergy';
+import EnergyDashboard from './EnergyDashboard';
 
 export default function App() {
-  return <DashboardEnergy />;
+  return <EnergyDashboard />;
 }
