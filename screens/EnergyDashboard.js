@@ -1,105 +1,93 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 
-const DashboardEnergy = () => {
+export default function EnergyDashboard() {
   const [energyData, setEnergyData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://lla-backend-mj96.onrender.com/energy')
-      .then(response => response.json())
-      .then(data => {
+    async function fetchEnergy() {
+      try {
+        const response = await fetch('https://lla-backend-mj96.onrender.com/api/energy');
+        if (!response.ok) throw new Error(`Network response not ok: ${response.status}`);
+        const data = await response.json();
         setEnergyData(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
         setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching energy data:', error);
-        setLoading(false);
-      });
+      }
+    }
+
+    fetchEnergy();
   }, []);
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#888" />
-        <Text>Loading your energy data...</Text>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
   }
 
-  if (!energyData) {
+  if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load energy dashboard.</Text>
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>Error: {error}</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Live / Love / Align</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Energy Dashboard</Text>
+      
+      <Text style={styles.label}>Level:</Text>
+      <Text style={styles.value}>{energyData.level}</Text>
 
-      {Object.entries(energyData).map(([key, value]) => (
-        <View key={key} style={styles.card}>
-          <Text style={styles.label}>{formatKey(key)}</Text>
-          <Text style={styles.value}>{formatValue(value)}</Text>
-        </View>
-      ))}
-    </ScrollView>
+      <Text style={styles.label}>Mood:</Text>
+      <Text style={styles.value}>{energyData.mood}</Text>
+
+      <Text style={styles.label}>Timestamp:</Text>
+      <Text style={styles.value}>{new Date(energyData.ts).toLocaleString()}</Text>
+    </View>
   );
-};
-
-const formatKey = (key) => {
-  return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-};
-
-const formatValue = (value) => {
-  if (Array.isArray(value)) return value.join(', ');
-  if (typeof value === 'object') return JSON.stringify(value, null, 2);
-  return value?.toString() ?? 'N/A';
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    paddingBottom: 60,
-    backgroundColor: '#fff',
+    flex: 1,
+    backgroundColor: '#121212',
+    padding: 24,
+    justifyContent: 'center',
   },
-  header: {
-    fontSize: 28,
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  title: {
+    fontSize: 32,
     fontWeight: '700',
+    color: '#f5f5f5',
+    marginBottom: 32,
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  card: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 12,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: 20,
+    color: '#bbb',
+    marginTop: 16,
   },
   value: {
-    fontSize: 14,
-    color: '#333',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 26,
+    fontWeight: '600',
+    color: '#fff',
   },
   errorText: {
-    color: 'red',
+    color: '#ff4444',
+    fontSize: 18,
+    fontWeight: '700',
   },
 });
-
-export default DashboardEnergy;
-
